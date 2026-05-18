@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CalendarCheck, Flame, Gauge, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { categoryLabel } from "@/lib/constants";
@@ -30,7 +29,7 @@ export function Dashboard() {
   const [data, setData] = useState<DashboardAnalytics | null>(null);
 
   useEffect(() => {
-    fetch("/api/analytics/overview")
+    fetch("/api/analytics/overview?scope=dashboard")
       .then((response) => response.json())
       .then((payload: AnalyticsResponse) => setData(payload.dashboard))
       .catch(() => setData(null));
@@ -38,6 +37,10 @@ export function Dashboard() {
 
   const weeklyVolume = useMemo(
     () => data?.weeklyConsistency.reduce((total, day) => total + day.volume, 0) ?? 0,
+    [data?.weeklyConsistency],
+  );
+  const maxDailyVolume = useMemo(
+    () => Math.max(...(data?.weeklyConsistency.map((day) => day.volume) ?? [0]), 1),
     [data?.weeklyConsistency],
   );
 
@@ -60,19 +63,19 @@ export function Dashboard() {
             <h2 className="text-lg font-black">Weekly consistency</h2>
             <span className="text-sm text-steel">{data.weeklyConsistency.filter((day) => day.completed).length}/7 sessions</span>
           </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.weeklyConsistency}>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} stroke="#9aa6b2" />
-                <YAxis tickLine={false} axisLine={false} stroke="#9aa6b2" />
-                <Tooltip
-                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                  contentStyle={{ background: "#10141b", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8 }}
-                />
-                <Bar dataKey="volume" fill="#b7ff3c" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex h-72 items-end gap-3">
+            {data.weeklyConsistency.map((day) => (
+              <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-3">
+                <div className="flex h-56 w-full items-end rounded-lg bg-white/[0.04] p-1">
+                  <div
+                    className="w-full rounded-md bg-acid transition-all duration-500"
+                    style={{ height: `${Math.max(day.completed ? 8 : 0, (day.volume / maxDailyVolume) * 100)}%` }}
+                    title={`${day.day}: ${formatNumber(day.volume)} kg`}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-steel">{day.day}</span>
+              </div>
+            ))}
           </div>
         </Card>
 
