@@ -1,0 +1,128 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CalendarCheck, Flame, Gauge, Trophy } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { categoryLabel } from "@/lib/constants";
+import { formatNumber } from "@/lib/utils";
+import type { DashboardAnalytics } from "@/types/domain";
+
+type AnalyticsResponse = {
+  dashboard: DashboardAnalytics;
+};
+
+function Metric({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string | number }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-steel">{label}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/8 text-acid">
+          <Icon size={18} />
+        </span>
+      </div>
+      <p className="mt-4 text-3xl font-black">{value}</p>
+    </Card>
+  );
+}
+
+export function Dashboard() {
+  const [data, setData] = useState<DashboardAnalytics | null>(null);
+
+  useEffect(() => {
+    fetch("/api/analytics/overview")
+      .then((response) => response.json())
+      .then((payload: AnalyticsResponse) => setData(payload.dashboard))
+      .catch(() => setData(null));
+  }, []);
+
+  const weeklyVolume = useMemo(
+    () => data?.weeklyConsistency.reduce((total, day) => total + day.volume, 0) ?? 0,
+    [data?.weeklyConsistency],
+  );
+
+  if (!data) {
+    return <div className="grid gap-4 md:grid-cols-4">{[1, 2, 3, 4].map((item) => <Card key={item} className="h-32 animate-pulse" />)}</div>;
+  }
+
+  return (
+    <div className="space-y-5 animate-fade-up">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Metric icon={CalendarCheck} label="Total workouts" value={data.totalWorkouts} />
+        <Metric icon={Flame} label="Current streak" value={`${data.currentStreak} days`} />
+        <Metric icon={Gauge} label="Weekly volume" value={formatNumber(weeklyVolume)} />
+        <Metric icon={Trophy} label="Best lift" value={data.bestLifts[0] ? `${data.bestLifts[0].weight} kg` : "New"} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+        <Card>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-black">Weekly consistency</h2>
+            <span className="text-sm text-steel">{data.weeklyConsistency.filter((day) => day.completed).length}/7 sessions</span>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.weeklyConsistency}>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+                <XAxis dataKey="day" tickLine={false} axisLine={false} stroke="#9aa6b2" />
+                <YAxis tickLine={false} axisLine={false} stroke="#9aa6b2" />
+                <Tooltip
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  contentStyle={{ background: "#10141b", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 8 }}
+                />
+                <Bar dataKey="volume" fill="#b7ff3c" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 text-lg font-black">Best lifts</h2>
+          <div className="space-y-3">
+            {data.bestLifts.length === 0 && <p className="text-sm text-steel">Complete a workout to start your leaderboard.</p>}
+            {data.bestLifts.map((lift) => (
+              <div key={lift.exercise} className="flex items-center justify-between rounded-lg bg-white/[0.04] p-3">
+                <div>
+                  <p className="font-semibold">{lift.exercise}</p>
+                  <p className="text-xs text-steel">{lift.reps} reps</p>
+                </div>
+                <span className="text-lg font-black text-acid">{lift.weight} kg</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <h2 className="mb-4 text-lg font-black">Volume analytics</h2>
+          <div className="space-y-3">
+            {data.volumeByCategory.map((item) => (
+              <div key={item.category}>
+                <div className="mb-2 flex justify-between text-sm">
+                  <span>{categoryLabel(item.category)}</span>
+                  <span className="text-steel">{formatNumber(item.volume)} kg</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/8">
+                  <div className="h-2 rounded-full bg-acid" style={{ width: `${Math.min(100, item.volume / 100)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 text-lg font-black">Muscle frequency</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {data.muscleFrequency.slice(0, 8).map((item) => (
+              <div key={item.muscle} className="rounded-lg bg-white/[0.04] p-3">
+                <p className="text-sm font-semibold">{item.muscle}</p>
+                <p className="mt-2 text-2xl font-black text-mint">{item.sessions}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
