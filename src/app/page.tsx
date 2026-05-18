@@ -4,16 +4,17 @@ import { AppShell } from "@/components/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth";
-import { getDashboardData } from "@/lib/server-data";
+import { getDashboardData, getProfile } from "@/lib/server-data";
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const dashboard = await getDashboardData(user.id);
+  const [dashboard, profile] = await Promise.all([getDashboardData(user.id), getProfile(user.id)]);
+  const name = profile.display_name?.trim();
 
   return (
     <AppShell>
       <PageHeader
-        title="Dashboard"
+        title={name ? `Welcome, ${name}` : "Welcome"}
         eyebrow="Today in the loop"
         action={
           <Link

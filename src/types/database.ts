@@ -10,6 +10,9 @@ export type Database = {
           id: string;
           display_name: string | null;
           avatar_url: string | null;
+          age: number | null;
+          body_weight: number | null;
+          gender: "female" | "male" | "non_binary" | "prefer_not_to_say" | null;
           created_at: string;
           updated_at: string;
         };
@@ -17,12 +20,18 @@ export type Database = {
           id: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          age?: number | null;
+          body_weight?: number | null;
+          gender?: "female" | "male" | "non_binary" | "prefer_not_to_say" | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           display_name?: string | null;
           avatar_url?: string | null;
+          age?: number | null;
+          body_weight?: number | null;
+          gender?: "female" | "male" | "non_binary" | "prefer_not_to_say" | null;
           updated_at?: string;
         };
         Relationships: [];

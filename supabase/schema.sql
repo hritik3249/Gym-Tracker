@@ -11,9 +11,16 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   avatar_url text,
+  age integer check (age is null or age between 1 and 130),
+  body_weight numeric(6, 2) check (body_weight is null or body_weight >= 0),
+  gender text check (gender is null or gender in ('female', 'male', 'non_binary', 'prefer_not_to_say')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists age integer check (age is null or age between 1 and 130);
+alter table public.profiles add column if not exists body_weight numeric(6, 2) check (body_weight is null or body_weight >= 0);
+alter table public.profiles add column if not exists gender text check (gender is null or gender in ('female', 'male', 'non_binary', 'prefer_not_to_say'));
 
 create table if not exists public.exercises (
   id uuid primary key default gen_random_uuid(),

@@ -1,4 +1,16 @@
 export type ExerciseCategory = "push" | "pull" | "legs" | "arms";
+export type Gender = "female" | "male" | "non_binary" | "prefer_not_to_say";
+
+export type Profile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  age: number | null;
+  body_weight: number | null;
+  gender: Gender | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type Exercise = {
   id: string;

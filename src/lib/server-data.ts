@@ -1,6 +1,14 @@
 import { buildDashboardAnalytics, buildProgressPoints } from "@/lib/analytics";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Exercise, WorkoutWithSets } from "@/types/domain";
+import type { Exercise, Profile, WorkoutWithSets } from "@/types/domain";
+
+export async function getProfile(userId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+
+  if (error) throw new Error(error.message);
+  return data as Profile;
+}
 
 export async function getDashboardData(userId: string) {
   const supabase = await createSupabaseServerClient();
