@@ -4,9 +4,11 @@ import { AppShell } from "@/components/app-shell";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth";
+import { getDashboardData } from "@/lib/server-data";
 
 export default async function DashboardPage() {
-  await requireUser();
+  const user = await requireUser();
+  const dashboard = await getDashboardData(user.id);
 
   return (
     <AppShell>
@@ -23,7 +25,7 @@ export default async function DashboardPage() {
           </Link>
         }
       />
-      <Dashboard />
+      <Dashboard data={dashboard} />
     </AppShell>
   );
 }

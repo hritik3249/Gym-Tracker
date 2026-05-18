@@ -2,14 +2,16 @@ import { AppShell } from "@/components/app-shell";
 import { ExerciseManager } from "@/components/exercises/exercise-manager";
 import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth";
+import { getExercises } from "@/lib/server-data";
 
 export default async function ExercisesPage() {
-  await requireUser();
+  const user = await requireUser();
+  const exercises = await getExercises(user.id);
 
   return (
     <AppShell>
       <PageHeader title="Exercises" eyebrow="Library management" />
-      <ExerciseManager />
+      <ExerciseManager initialExercises={exercises} />
     </AppShell>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { GitCompareArrows } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,10 @@ function workoutVolume(workout: WorkoutWithSets) {
   return workout.workout_sets.reduce((total, set) => total + Number(set.weight) * Number(set.reps), 0);
 }
 
-export function WorkoutHistory() {
-  const [workouts, setWorkouts] = useState<WorkoutWithSets[]>([]);
+export function WorkoutHistory({ initialWorkouts }: { initialWorkouts: WorkoutWithSets[] }) {
+  const [workouts] = useState<WorkoutWithSets[]>(initialWorkouts);
   const [filter, setFilter] = useState<ExerciseCategory | "all">("all");
   const [compareIds, setCompareIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch("/api/workouts?limit=120")
-      .then((response) => response.json())
-      .then((payload) => setWorkouts(payload.workouts ?? []));
-  }, []);
 
   const visibleWorkouts = useMemo(
     () => workouts.filter((workout) => filter === "all" || workout.category === filter),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Edit3, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,8 +16,8 @@ const emptyForm = {
   notes: "",
 };
 
-export function ExerciseManager() {
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+export function ExerciseManager({ initialExercises }: { initialExercises: Exercise[] }) {
+  const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
   const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState<ExerciseCategory | "all">("all");
 
@@ -26,20 +26,6 @@ export function ExerciseManager() {
     const payload = await response.json();
     setExercises(payload.exercises ?? []);
   }
-
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/exercises")
-      .then((response) => response.json())
-      .then((payload) => {
-        if (active) setExercises(payload.exercises ?? []);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const visibleExercises = useMemo(
     () => exercises.filter((exercise) => filter === "all" || exercise.category === filter),

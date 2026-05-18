@@ -1,15 +1,8 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import { CalendarCheck, Flame, Gauge, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { categoryLabel } from "@/lib/constants";
 import { formatNumber } from "@/lib/utils";
 import type { DashboardAnalytics } from "@/types/domain";
-
-type AnalyticsResponse = {
-  dashboard: DashboardAnalytics;
-};
 
 function Metric({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string | number }) {
   return (
@@ -25,28 +18,9 @@ function Metric({ icon: Icon, label, value }: { icon: typeof Trophy; label: stri
   );
 }
 
-export function Dashboard() {
-  const [data, setData] = useState<DashboardAnalytics | null>(null);
-
-  useEffect(() => {
-    fetch("/api/analytics/overview?scope=dashboard")
-      .then((response) => response.json())
-      .then((payload: AnalyticsResponse) => setData(payload.dashboard))
-      .catch(() => setData(null));
-  }, []);
-
-  const weeklyVolume = useMemo(
-    () => data?.weeklyConsistency.reduce((total, day) => total + day.volume, 0) ?? 0,
-    [data?.weeklyConsistency],
-  );
-  const maxDailyVolume = useMemo(
-    () => Math.max(...(data?.weeklyConsistency.map((day) => day.volume) ?? [0]), 1),
-    [data?.weeklyConsistency],
-  );
-
-  if (!data) {
-    return <div className="grid gap-4 md:grid-cols-4">{[1, 2, 3, 4].map((item) => <Card key={item} className="h-32 animate-pulse" />)}</div>;
-  }
+export function Dashboard({ data }: { data: DashboardAnalytics }) {
+  const weeklyVolume = data.weeklyConsistency.reduce((total, day) => total + day.volume, 0);
+  const maxDailyVolume = Math.max(...data.weeklyConsistency.map((day) => day.volume), 1);
 
   return (
     <div className="space-y-5 animate-fade-up">

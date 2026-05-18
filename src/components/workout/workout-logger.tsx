@@ -32,29 +32,21 @@ function toDraftSets(workout?: WorkoutWithSets | null): DraftSet[] {
   }));
 }
 
-export function WorkoutLogger() {
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [workouts, setWorkouts] = useState<WorkoutWithSets[]>([]);
+export function WorkoutLogger({
+  initialExercises,
+  previousWorkout,
+}: {
+  initialExercises: Exercise[];
+  previousWorkout: WorkoutWithSets | null;
+}) {
+  const [exercises] = useState<Exercise[]>(initialExercises);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
-  const [category, setCategory] = useState<ExerciseCategory>("push");
+  const [category, setCategory] = useState<ExerciseCategory>(getNextCategory(previousWorkout?.category));
   const [notes, setNotes] = useState("");
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [sets, setSets] = useState<DraftSet[]>([]);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "offline">("idle");
-  const hydrated = useRef(false);
-
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/exercises").then((response) => response.json()),
-      fetch("/api/workouts?limit=1").then((response) => response.json()),
-    ]).then(([exercisePayload, workoutPayload]) => {
-      setExercises(exercisePayload.exercises ?? []);
-      const previous = workoutPayload.workouts?.[0] as WorkoutWithSets | undefined;
-      setWorkouts(workoutPayload.workouts ?? []);
-      setCategory(getNextCategory(previous?.category));
-      hydrated.current = true;
-    });
-  }, []);
+  const hydrated = useRef(true);
 
   useEffect(() => {
     const interval = window.setInterval(() => setDurationSeconds((seconds) => seconds + 1), 1000);

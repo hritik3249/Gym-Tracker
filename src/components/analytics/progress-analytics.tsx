@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/input";
@@ -24,22 +24,11 @@ type AnalyticsPayload = {
   personalRecords: PersonalRecord[];
 };
 
-export function ProgressAnalytics() {
-  const [data, setData] = useState<AnalyticsPayload | null>(null);
-  const [exercise, setExercise] = useState("");
+export function ProgressAnalytics({ initialData }: { initialData: AnalyticsPayload }) {
+  const [data] = useState<AnalyticsPayload>(initialData);
+  const [exercise, setExercise] = useState(initialData.progress[0]?.exercise ?? "");
 
-  useEffect(() => {
-    fetch("/api/analytics/overview")
-      .then((response) => response.json())
-      .then((payload) => {
-        setData(payload);
-        setExercise(payload.progress?.[0]?.exercise ?? "");
-      });
-  }, []);
-
-  const active = useMemo(() => data?.progress.find((item) => item.exercise === exercise), [data?.progress, exercise]);
-
-  if (!data) return <Card className="h-96 animate-pulse" />;
+  const active = useMemo(() => data.progress.find((item) => item.exercise === exercise), [data.progress, exercise]);
 
   return (
     <div className="space-y-5">
