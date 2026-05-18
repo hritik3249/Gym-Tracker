@@ -8,14 +8,14 @@ import { Input, Select, Textarea } from "@/components/ui/input";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { CATEGORIES, categoryLabel, getNextCategory } from "@/lib/constants";
 import { resilientFetch } from "@/lib/offline";
-import type { Exercise, ExerciseCategory, WorkoutSet, WorkoutWithSets } from "@/types/domain";
+import type { Exercise, ExerciseCategory, WorkoutWithSets } from "@/types/domain";
 
 type DraftSet = {
   localId: string;
   exercise_id: string;
   set_index: number;
-  reps: number;
-  weight: number;
+  reps: number | "";
+  weight: number | "";
   notes: string;
   completed: boolean;
 };
@@ -63,7 +63,11 @@ export function WorkoutLogger({
           notes,
           duration_seconds: durationSeconds,
           status,
-          sets,
+          sets: sets.map((set) => ({
+            ...set,
+            reps: Number(set.reps || 0),
+            weight: Number(set.weight || 0),
+          })),
         },
       });
 
@@ -108,7 +112,7 @@ export function WorkoutLogger({
         exercise_id: exerciseId,
         set_index: exerciseSets.length + 1,
         reps: 8,
-        weight: 0,
+        weight: "",
         notes: "",
         completed: false,
       },
@@ -204,10 +208,30 @@ export function WorkoutLogger({
                     <tr key={set.localId} className="border-t border-line">
                       <td className="px-4 py-3 font-bold">{set.set_index}</td>
                       <td className="px-4 py-3">
-                        <Input type="number" min={0} value={set.weight} onChange={(event) => updateSet(set.localId, { weight: Number(event.target.value) })} />
+                        <Input
+                          type="number"
+                          min={0}
+                          value={set.weight}
+                          onFocus={(event) => event.currentTarget.select()}
+                          onChange={(event) =>
+                            updateSet(set.localId, {
+                              weight: event.target.value === "" ? "" : Number(event.target.value),
+                            })
+                          }
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <Input type="number" min={0} value={set.reps} onChange={(event) => updateSet(set.localId, { reps: Number(event.target.value) })} />
+                        <Input
+                          type="number"
+                          min={0}
+                          value={set.reps}
+                          onFocus={(event) => event.currentTarget.select()}
+                          onChange={(event) =>
+                            updateSet(set.localId, {
+                              reps: event.target.value === "" ? "" : Number(event.target.value),
+                            })
+                          }
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <Input value={set.notes} onChange={(event) => updateSet(set.localId, { notes: event.target.value })} />
