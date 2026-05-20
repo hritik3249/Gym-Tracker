@@ -5,6 +5,12 @@ import { OfflineProvider } from "@/components/offline-provider";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
+export const metadata = {
+  icons: {
+    icon: '/favicon.png',
+  },
+}
+
 export const metadata: Metadata = {
   title: "LiftLoop",
   description: "A premium Push Pull Legs Arms workout tracker.",
