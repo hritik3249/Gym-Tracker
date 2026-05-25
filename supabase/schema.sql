@@ -96,7 +96,8 @@ create trigger workout_sets_touch_updated_at
 before update on public.workout_sets
 for each row execute function public.touch_updated_at();
 
-create or replace view public.exercise_personal_records as
+create or replace view public.exercise_personal_records
+with (security_invoker = true) as
 select
   ws.user_id,
   ws.exercise_id,

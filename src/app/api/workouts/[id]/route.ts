@@ -20,6 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
     .eq("id", id)
     .eq("user_id", user.id)
+    .eq("status", "completed")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });

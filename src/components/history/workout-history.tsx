@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { GitCompareArrows } from "lucide-react";
+import { GitCompareArrows, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/input";
@@ -15,9 +15,10 @@ function workoutVolume(workout: WorkoutWithSets) {
 }
 
 export function WorkoutHistory({ initialWorkouts }: { initialWorkouts: WorkoutWithSets[] }) {
-  const [workouts] = useState<WorkoutWithSets[]>(initialWorkouts);
+  const [workouts, setWorkouts] = useState<WorkoutWithSets[]>(initialWorkouts);
   const [filter, setFilter] = useState<ExerciseCategory | "all">("all");
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const visibleWorkouts = useMemo(
     () => workouts.filter((workout) => filter === "all" || workout.category === filter),
@@ -30,6 +31,22 @@ export function WorkoutHistory({ initialWorkouts }: { initialWorkouts: WorkoutWi
       if (current.includes(id)) return current.filter((item) => item !== id);
       return [...current.slice(-1), id];
     });
+  }
+
+  async function deleteWorkout(id: string) {
+    const confirmed = window.confirm("Delete this workout from your history?");
+    if (!confirmed) return;
+
+    setDeletingId(id);
+    const response = await fetch(`/api/workouts/${id}`, { method: "DELETE" });
+    setDeletingId(null);
+
+    if (!response.ok) return;
+
+    setWorkouts((current) => current.filter((workout) => workout.id !== id));
+    setCompareIds((current) => current.filter((compareId) => compareId !== id));
+    localStorage.setItem("liftloop:workout-finished", new Date().toISOString());
+    window.dispatchEvent(new Event("liftloop:workout-finished"));
   }
 
   return (
@@ -74,10 +91,16 @@ export function WorkoutHistory({ initialWorkouts }: { initialWorkouts: WorkoutWi
                 <h2 className="mt-1 text-xl font-black">{format(new Date(workout.performed_at), "EEEE, MMM d")}</h2>
                 <p className="text-sm text-steel">{formatNumber(workoutVolume(workout))} kg volume • {workout.workout_sets.length} sets</p>
               </div>
-              <Button variant={compareIds.includes(workout.id) ? "primary" : "secondary"} onClick={() => toggleCompare(workout.id)}>
-                <GitCompareArrows size={18} />
-                Compare
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant={compareIds.includes(workout.id) ? "primary" : "secondary"} onClick={() => toggleCompare(workout.id)}>
+                  <GitCompareArrows size={18} />
+                  Compare
+                </Button>
+                <Button variant="danger" onClick={() => deleteWorkout(workout.id)} disabled={deletingId === workout.id}>
+                  <Trash2 size={18} />
+                  {deletingId === workout.id ? "Deleting" : "Delete"}
+                </Button>
+              </div>
             </div>
 
             <div className="mt-5 overflow-x-auto">
