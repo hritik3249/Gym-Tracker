@@ -194,8 +194,8 @@ export function WorkoutLogger({
 
         {groupedSets.map(({ exercise, sets: exerciseSets }) => (
           <Card key={exercise.id} className="p-0">
-            <div className="flex items-center justify-between border-b border-line p-4">
-              <div>
+            <div className="flex flex-col gap-4 border-b border-line p-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <h2 className="font-black">{exercise.name}</h2>
                 <p className="text-sm text-steel">{exercise.target_muscle ?? categoryLabel(exercise.category)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -215,7 +215,69 @@ export function WorkoutLogger({
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="space-y-3 p-4 md:hidden">
+              {exerciseSets.map((set) => (
+                <div key={set.localId} className="rounded-lg border border-line bg-white/[0.03] p-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-sm font-black">Set {set.set_index}</span>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 text-sm text-steel">
+                        <input
+                          type="checkbox"
+                          className="h-5 w-5 accent-lime-300"
+                          checked={set.completed}
+                          onChange={(event) => updateSet(set.localId, { completed: event.target.checked })}
+                        />
+                        Done
+                      </label>
+                      <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Delete set" onClick={() => deleteSet(set.localId)}>
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.14em] text-steel">Weight</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="decimal"
+                        value={set.weight}
+                        onFocus={(event) => event.currentTarget.select()}
+                        onChange={(event) =>
+                          updateSet(set.localId, {
+                            weight: event.target.value === "" ? "" : Number(event.target.value),
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.14em] text-steel">Reps</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={set.reps}
+                        onFocus={(event) => event.currentTarget.select()}
+                        onChange={(event) =>
+                          updateSet(set.localId, {
+                            reps: event.target.value === "" ? "" : Number(event.target.value),
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-[0.14em] text-steel">Notes</label>
+                    <Input value={set.notes} onChange={(event) => updateSet(set.localId, { notes: event.target.value })} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[680px] text-left text-sm">
                 <thead className="text-xs uppercase tracking-[0.16em] text-steel">
                   <tr>
@@ -235,6 +297,7 @@ export function WorkoutLogger({
                         <Input
                           type="number"
                           min={0}
+                          inputMode="decimal"
                           value={set.weight}
                           onFocus={(event) => event.currentTarget.select()}
                           onChange={(event) =>
@@ -248,6 +311,7 @@ export function WorkoutLogger({
                         <Input
                           type="number"
                           min={0}
+                          inputMode="numeric"
                           value={set.reps}
                           onFocus={(event) => event.currentTarget.select()}
                           onChange={(event) =>

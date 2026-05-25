@@ -5,7 +5,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-lg border border-line bg-white/[0.04] px-3 text-sm text-white outline-none transition placeholder:text-steel focus:border-acid/70 focus:ring-2 focus:ring-acid/10",
+        "h-11 w-full rounded-lg border border-line bg-white/[0.04] px-3 text-base text-white outline-none transition placeholder:text-steel focus:border-acid/70 focus:ring-2 focus:ring-acid/10 sm:text-sm",
         className,
       )}
       {...props}
@@ -17,7 +17,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-11 w-full rounded-lg border border-line bg-panelSoft px-3 text-sm text-white outline-none transition focus:border-acid/70 focus:ring-2 focus:ring-acid/10",
+        "h-11 w-full rounded-lg border border-line bg-panelSoft px-3 text-base text-white outline-none transition focus:border-acid/70 focus:ring-2 focus:ring-acid/10 sm:text-sm",
         className,
       )}
       {...props}
@@ -29,7 +29,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   return (
     <textarea
       className={cn(
-        "min-h-24 w-full rounded-lg border border-line bg-white/[0.04] px-3 py-3 text-sm text-white outline-none transition placeholder:text-steel focus:border-acid/70 focus:ring-2 focus:ring-acid/10",
+        "min-h-24 w-full rounded-lg border border-line bg-white/[0.04] px-3 py-3 text-base text-white outline-none transition placeholder:text-steel focus:border-acid/70 focus:ring-2 focus:ring-acid/10 sm:text-sm",
         className,
       )}
       {...props}
