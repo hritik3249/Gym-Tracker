@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Activity, BarChart3, Dumbbell, History, LogOut, Settings, Trophy } from "lucide-react";
@@ -19,6 +20,28 @@ const nav = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const prefetchTab = useCallback(
+    (href: string) => {
+      if (href !== pathname) router.prefetch(href);
+    },
+    [pathname, router],
+  );
+
+  useEffect(() => {
+    const warmTabs = () => {
+      for (const item of nav) prefetchTab(item.href);
+    };
+
+    const canIdle = typeof window.requestIdleCallback === "function";
+
+    if (canIdle) {
+      const idleId = window.requestIdleCallback(warmTabs, { timeout: 1800 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = globalThis.setTimeout(warmTabs, 250);
+    return () => globalThis.clearTimeout(timeoutId);
+  }, [prefetchTab]);
 
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
@@ -48,6 +71,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
+                onFocus={() => prefetchTab(item.href)}
+                onMouseEnter={() => prefetchTab(item.href)}
                 className={cn(
                   "flex h-12 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-steel transition hover:bg-white/5 hover:text-white",
                   active && "bg-white/8 text-white shadow-glow",
@@ -79,6 +105,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
+                onFocus={() => prefetchTab(item.href)}
+                onMouseEnter={() => prefetchTab(item.href)}
                 aria-label={item.label}
                 className={cn(
                   "grid h-12 place-items-center rounded-lg text-steel transition hover:bg-white/5",
