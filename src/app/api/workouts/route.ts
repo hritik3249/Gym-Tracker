@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     .from("workouts")
     .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
     .eq("user_id", user.id)
+    .eq("status", "completed")
     .order("performed_at", { ascending: false })
     .limit(limit);
 
@@ -48,12 +49,16 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
+  if (body.status !== "completed") {
+    return NextResponse.json({ error: "Workouts are saved only when Finish is pressed." }, { status: 400 });
+  }
+
   const workoutPayload = {
     category: body.category as ExerciseCategory,
     performed_at: body.performed_at ?? new Date().toISOString(),
     duration_seconds: Number(body.duration_seconds ?? 0),
     notes: body.notes?.trim() || null,
-    status: body.status === "draft" ? "draft" as const : "completed" as const,
+    status: "completed" as const,
   };
 
   const workoutMutation = body.id

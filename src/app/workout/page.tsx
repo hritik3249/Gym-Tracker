@@ -6,12 +6,12 @@ import { getWorkoutBootstrap } from "@/lib/server-data";
 
 export default async function WorkoutPage() {
   const user = await requireUser();
-  const { exercises, previousWorkout } = await getWorkoutBootstrap(user.id);
+  const { exercises, previousWorkout, recentWorkouts } = await getWorkoutBootstrap(user.id);
 
   return (
     <AppShell>
       <PageHeader title="Workout Logger" eyebrow="Push Pull Legs Arms" />
-      <WorkoutLogger initialExercises={exercises} previousWorkout={previousWorkout} />
+      <WorkoutLogger initialExercises={exercises} previousWorkout={previousWorkout} recentWorkouts={recentWorkouts} />
     </AppShell>
   );
 }

@@ -16,6 +16,7 @@ export async function getDashboardData(userId: string) {
     .from("workouts")
     .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
     .eq("user_id", userId)
+    .eq("status", "completed")
     .order("performed_at", { ascending: false })
     .limit(60);
 
@@ -43,6 +44,7 @@ export async function getWorkouts(userId: string, limit = 80) {
     .from("workouts")
     .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
     .eq("user_id", userId)
+    .eq("status", "completed")
     .order("performed_at", { ascending: false })
     .limit(limit);
 
@@ -51,11 +53,12 @@ export async function getWorkouts(userId: string, limit = 80) {
 }
 
 export async function getWorkoutBootstrap(userId: string) {
-  const [exercises, workouts] = await Promise.all([getExercises(userId), getWorkouts(userId, 1)]);
+  const [exercises, workouts] = await Promise.all([getExercises(userId), getWorkouts(userId, 40)]);
 
   return {
     exercises,
     previousWorkout: workouts[0] ?? null,
+    recentWorkouts: workouts,
   };
 }
 
@@ -66,6 +69,7 @@ export async function getProgressAnalytics(userId: string) {
       .from("workouts")
       .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
       .eq("user_id", userId)
+      .eq("status", "completed")
       .order("performed_at", { ascending: false })
       .limit(120),
     supabase.from("exercise_personal_records").select("*").eq("user_id", userId).order("max_weight", { ascending: false }),

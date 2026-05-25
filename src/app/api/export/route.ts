@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     .from("workouts")
     .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
     .eq("user_id", user.id)
+    .eq("status", "completed")
     .order("performed_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Copy, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,10 +36,13 @@ function toDraftSets(workout?: WorkoutWithSets | null): DraftSet[] {
 export function WorkoutLogger({
   initialExercises,
   previousWorkout,
+  recentWorkouts,
 }: {
   initialExercises: Exercise[];
   previousWorkout: WorkoutWithSets | null;
+  recentWorkouts: WorkoutWithSets[];
 }) {
+  const router = useRouter();
   const [exercises] = useState<Exercise[]>(initialExercises);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [category, setCategory] = useState<ExerciseCategory>(getNextCategory(previousWorkout?.category));
@@ -46,15 +50,15 @@ export function WorkoutLogger({
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [sets, setSets] = useState<DraftSet[]>([]);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "offline">("idle");
-  const hydrated = useRef(true);
 
   useEffect(() => {
     const interval = window.setInterval(() => setDurationSeconds((seconds) => seconds + 1), 1000);
     return () => window.clearInterval(interval);
   }, []);
 
-  const saveWorkout = useCallback(
-    async (status: "draft" | "completed") => {
+  const finishWorkout = useCallback(
+    async () => {
+      setSaveState("saving");
       const response = await resilientFetch("/api/workouts", {
         method: "POST",
         json: {
@@ -62,7 +66,7 @@ export function WorkoutLogger({
           category,
           notes,
           duration_seconds: durationSeconds,
-          status,
+          status: "completed",
           sets: sets.map((set) => ({
             ...set,
             reps: Number(set.reps || 0),
@@ -74,26 +78,18 @@ export function WorkoutLogger({
       const payload = await response.json();
       setWorkoutId(payload.workout.id);
       setSaveState("saved");
-      if (status === "completed") {
-        setWorkoutId(null);
-        setSets([]);
-        setNotes("");
-        setCategory(getNextCategory(category));
-        setDurationSeconds(0);
-      }
+      localStorage.setItem("liftloop:workout-finished", new Date().toISOString());
+      window.dispatchEvent(new Event("liftloop:workout-finished"));
+      setWorkoutId(null);
+      setSets([]);
+      setNotes("");
+      setCategory(getNextCategory(category));
+      setDurationSeconds(0);
+      router.push("/");
+      router.refresh();
     },
-    [category, durationSeconds, notes, sets, workoutId],
+    [category, durationSeconds, notes, router, sets, workoutId],
   );
-
-  useEffect(() => {
-    if (!hydrated.current || sets.length === 0) return;
-    setSaveState("saving");
-    const timeout = window.setTimeout(() => {
-      saveWorkout("draft").catch(() => setSaveState("offline"));
-    }, 900);
-
-    return () => window.clearTimeout(timeout);
-  }, [saveWorkout, sets.length]);
 
   const filteredExercises = useMemo(() => exercises.filter((exercise) => exercise.category === category), [category, exercises]);
   const groupedSets = useMemo(() => {
@@ -102,6 +98,24 @@ export function WorkoutLogger({
       sets: sets.filter((set) => set.exercise_id === exercise.id).sort((a, b) => a.set_index - b.set_index),
     }));
   }, [filteredExercises, sets]);
+  const previousSetsByExercise = useMemo(() => {
+    const map = new Map<string, WorkoutWithSets["workout_sets"]>();
+
+    for (const workout of recentWorkouts) {
+      for (const set of workout.workout_sets ?? []) {
+        if (!map.has(set.exercise_id)) {
+          map.set(
+            set.exercise_id,
+            workout.workout_sets
+              .filter((candidate) => candidate.exercise_id === set.exercise_id)
+              .sort((a, b) => a.set_index - b.set_index),
+          );
+        }
+      }
+    }
+
+    return map;
+  }, [recentWorkouts]);
 
   function addSet(exerciseId: string) {
     const exerciseSets = sets.filter((set) => set.exercise_id === exerciseId);
@@ -136,7 +150,7 @@ export function WorkoutLogger({
     const payload = await response.json();
     if (!response.ok) return;
     const workout = payload.workout as WorkoutWithSets;
-    setWorkoutId(workout.id);
+    setWorkoutId(null);
     setCategory(workout.category);
     setNotes(workout.notes ?? "");
     setSets(toDraftSets(workout));
@@ -164,7 +178,7 @@ export function WorkoutLogger({
                 <Copy size={18} />
                 Repeat
               </Button>
-              <Button onClick={() => saveWorkout("completed")} disabled={sets.length === 0}>
+              <Button onClick={() => finishWorkout().catch(() => setSaveState("offline"))} disabled={sets.length === 0 || saveState === "saving"}>
                 <Check size={18} />
                 Finish
               </Button>
@@ -184,6 +198,16 @@ export function WorkoutLogger({
               <div>
                 <h2 className="font-black">{exercise.name}</h2>
                 <p className="text-sm text-steel">{exercise.target_muscle ?? categoryLabel(exercise.category)}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(previousSetsByExercise.get(exercise.id) ?? []).length === 0 && (
+                    <span className="rounded-md bg-white/[0.04] px-2 py-1 text-xs text-steel">No previous sets</span>
+                  )}
+                  {(previousSetsByExercise.get(exercise.id) ?? []).map((previousSet) => (
+                    <span key={previousSet.id} className="rounded-md bg-white/[0.06] px-2 py-1 text-xs font-semibold text-steel">
+                      Prev {previousSet.set_index}: {previousSet.weight}kg x {previousSet.reps}
+                    </span>
+                  ))}
+                </div>
               </div>
               <Button variant="secondary" onClick={() => addSet(exercise.id)}>
                 <Plus size={18} />
@@ -261,11 +285,11 @@ export function WorkoutLogger({
       <aside className="space-y-5">
         <RestTimer />
         <Card>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-steel">Auto-save</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-steel">Save mode</p>
           <p className="mt-2 flex items-center gap-2 text-lg font-black">
             <Save size={18} className="text-acid" />
-            {saveState === "idle" && "Ready"}
-            {saveState === "saving" && "Saving"}
+            {saveState === "idle" && "Local draft"}
+            {saveState === "saving" && "Finishing"}
             {saveState === "saved" && "Saved"}
             {saveState === "offline" && "Queued offline"}
           </p>
