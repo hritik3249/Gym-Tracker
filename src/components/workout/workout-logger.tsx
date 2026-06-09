@@ -6,6 +6,7 @@ import { Check, Copy, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { CATEGORIES, categoryLabel, getNextCategory } from "@/lib/constants";
 import { resilientFetch } from "@/lib/offline";
@@ -43,6 +44,7 @@ export function WorkoutLogger({
   recentWorkouts: WorkoutWithSets[];
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [exercises] = useState<Exercise[]>(initialExercises);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [category, setCategory] = useState<ExerciseCategory>(getNextCategory(previousWorkout?.category));
@@ -85,10 +87,11 @@ export function WorkoutLogger({
       setNotes("");
       setCategory(getNextCategory(category));
       setDurationSeconds(0);
+      toast("Workout saved!");
       router.push("/");
       router.refresh();
     },
-    [category, durationSeconds, notes, router, sets, workoutId],
+    [category, durationSeconds, notes, router, sets, toast, workoutId],
   );
 
   const filteredExercises = useMemo(() => exercises.filter((exercise) => exercise.category === category), [category, exercises]);
@@ -196,7 +199,14 @@ export function WorkoutLogger({
           <Card key={exercise.id} className="p-0">
             <div className="flex flex-col gap-4 border-b border-line p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <h2 className="font-black">{exercise.name}</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="font-black text-cream">{exercise.name}</h2>
+                  {exerciseSets.length > 0 && (
+                    <span className="rounded-full bg-acid/15 px-2 py-0.5 text-xs font-bold text-acid">
+                      {exerciseSets.filter((s) => s.completed).length}/{exerciseSets.length}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-steel">{exercise.target_muscle ?? categoryLabel(exercise.category)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(previousSetsByExercise.get(exercise.id) ?? []).length === 0 && (
@@ -224,7 +234,7 @@ export function WorkoutLogger({
                       <label className="flex items-center gap-2 text-sm text-steel">
                         <input
                           type="checkbox"
-                          className="h-5 w-5 accent-lime-300"
+                          className="h-5 w-5 accent-[#D3968C]"
                           checked={set.completed}
                           onChange={(event) => updateSet(set.localId, { completed: event.target.checked })}
                         />
@@ -327,7 +337,7 @@ export function WorkoutLogger({
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
-                          className="h-5 w-5 accent-lime-300"
+                          className="h-5 w-5 accent-[#D3968C]"
                           checked={set.completed}
                           onChange={(event) => updateSet(set.localId, { completed: event.target.checked })}
                         />

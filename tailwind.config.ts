@@ -32,7 +32,7 @@ const config: Config = {
         }
       },
       animation: {
-        "fade-up": "fade-up 240ms ease-out"
+        "fade-up": "fade-up 240ms ease-out both"
       }
     },
   },

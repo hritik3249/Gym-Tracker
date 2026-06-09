@@ -7,6 +7,7 @@ import { Activity, BarChart3, Dumbbell, History, LogOut, Settings, Trophy } from
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ToastProvider } from "@/components/ui/toast";
 
 const nav = [
   { href: "/", label: "Dashboard", icon: Activity },
@@ -50,6 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <ToastProvider>
     <div className="min-h-screen">
       <aside className="fixed left-0 top-0 z-30 hidden h-screen w-72 border-r border-line bg-ink/84 px-5 py-6 backdrop-blur-xl lg:block">
         <Link href="/" className="flex items-center gap-3">
@@ -121,5 +123,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
     </div>
+    </ToastProvider>
   );
 }
