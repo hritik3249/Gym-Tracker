@@ -162,6 +162,35 @@ export function WorkoutLogger({
     return map;
   }, [recentWorkouts]);
 
+  const sessionBest1RM = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const set of sets) {
+      if (!set.completed) continue;
+      const w = Number(set.weight || 0);
+      const r = Number(set.reps || 0);
+      if (w <= 0 || r <= 0) continue;
+      const rm = Math.round(w * (1 + r / 30));
+      if (rm > (map.get(set.exercise_id) ?? 0)) map.set(set.exercise_id, rm);
+    }
+    return map;
+  }, [sets]);
+
+  const getOverloadStatus = useCallback(
+    (exerciseId: string) => {
+      const prev = previousSetsByExercise.get(exerciseId) ?? [];
+      if (prev.length === 0) return null;
+      const prevBest = Math.max(...prev.map((s) => Number(s.weight)));
+      const done = sets.filter((s) => s.exercise_id === exerciseId && s.completed && Number(s.weight) > 0);
+      if (done.length === 0) return { type: "target" as const, weight: +(prevBest + 2.5).toFixed(1) };
+      const currentBest = Math.max(...done.map((s) => Number(s.weight)));
+      const diff = +(currentBest - prevBest).toFixed(1);
+      if (diff > 0) return { type: "up" as const, diff };
+      if (diff < 0) return { type: "down" as const, diff: Math.abs(diff) };
+      return { type: "same" as const };
+    },
+    [previousSetsByExercise, sets],
+  );
+
   function addSet(exerciseId: string) {
     const exerciseSets = sets.filter((set) => set.exercise_id === exerciseId);
     setSets((current) => [
@@ -295,6 +324,42 @@ export function WorkoutLogger({
                     </span>
                   ))}
                 </div>
+
+                {/* 1RM + progressive overload nudge */}
+                {(() => {
+                  const rm = sessionBest1RM.get(exercise.id);
+                  const nudge = getOverloadStatus(exercise.id);
+                  if (!rm && !nudge) return null;
+                  return (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {nudge?.type === "target" && (
+                        <span className="rounded-md bg-white/[0.05] px-2 py-0.5 text-xs font-semibold text-steel">
+                          Target {nudge.weight} kg
+                        </span>
+                      )}
+                      {nudge?.type === "up" && (
+                        <span className="rounded-md bg-mint/15 px-2 py-0.5 text-xs font-bold text-mint">
+                          ↑ +{nudge.diff} kg vs last
+                        </span>
+                      )}
+                      {nudge?.type === "same" && (
+                        <span className="rounded-md bg-white/[0.05] px-2 py-0.5 text-xs font-semibold text-steel">
+                          = Same as last
+                        </span>
+                      )}
+                      {nudge?.type === "down" && (
+                        <span className="rounded-md bg-ember/15 px-2 py-0.5 text-xs font-bold text-ember">
+                          ↓ {nudge.diff} kg below last
+                        </span>
+                      )}
+                      {rm && (
+                        <span className="rounded-md bg-acid/10 px-2 py-0.5 text-xs font-bold text-acid">
+                          Est. 1RM {rm} kg
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               <Button variant="secondary" onClick={() => addSet(exercise.id)}>
                 <Plus size={18} />
