@@ -29,16 +29,22 @@ const SECTIONS = [
     rows: [
       { label: "Chest", region: "chest" },
       { label: "Shoulders", region: "shoulder" },
-      { label: "Triceps", region: "tricep" },
+      { label: "Traps", region: "trap" },
     ],
   },
   {
     label: "Pull",
     rows: [
       { label: "Lats / Back", region: "lat" },
-      { label: "Biceps", region: "bicep" },
-      { label: "Traps", region: "trap" },
       { label: "Rear Delts", region: "rear_shoulder" },
+      { label: "Lower Back", region: "lower_back" },
+    ],
+  },
+  {
+    label: "Arms",
+    rows: [
+      { label: "Biceps", region: "bicep" },
+      { label: "Triceps", region: "tricep" },
       { label: "Forearms", region: "forearm" },
     ],
   },
@@ -46,7 +52,6 @@ const SECTIONS = [
     label: "Core",
     rows: [
       { label: "Abs / Core", region: "abs" },
-      { label: "Lower Back", region: "lower_back" },
     ],
   },
   {
@@ -105,7 +110,7 @@ export function MuscleHeatmap({ muscles }: Props) {
         <h2 className="text-lg font-black text-cream">Muscle activation</h2>
         <span className="text-xs text-steel">Last 60 workouts</span>
       </div>
-      <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+      <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
         {SECTIONS.map((section) => (
           <div key={section.label}>
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-acid">{section.label}</p>
