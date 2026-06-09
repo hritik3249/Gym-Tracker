@@ -10,18 +10,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#07090d",
-        panel: "#10141b",
-        panelSoft: "#171d26",
-        line: "rgba(255,255,255,0.09)",
-        acid: "#b7ff3c",
-        mint: "#30e6a1",
-        steel: "#9aa6b2",
-        ember: "#ff6b35"
+        ink: "#061A10",
+        panel: "#0A2318",
+        panelSoft: "#0D2B1E",
+        line: "rgba(247,244,213,0.09)",
+        acid: "#D3968C",
+        mint: "#839958",
+        steel: "#7a9e6a",
+        ember: "#c06050",
+        cream: "#F7F4D5",
+        midnight: "#105666",
       },
       boxShadow: {
-        glow: "0 0 60px rgba(183, 255, 60, 0.12)",
-        card: "0 18px 70px rgba(0, 0, 0, 0.32)"
+        glow: "0 0 60px rgba(211, 150, 140, 0.15)",
+        card: "0 18px 70px rgba(0, 0, 0, 0.50)"
       },
       keyframes: {
         "fade-up": {

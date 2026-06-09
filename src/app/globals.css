@@ -12,17 +12,17 @@
 
 html {
   min-height: 100%;
-  background: #07090d;
+  background: #061A10;
 }
 
 body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 20% 0%, rgba(183, 255, 60, 0.12), transparent 32rem),
-    radial-gradient(circle at 85% 18%, rgba(48, 230, 161, 0.12), transparent 28rem),
-    #07090d;
-  color: #f6f7f9;
+    radial-gradient(circle at 18% 0%, rgba(211, 150, 140, 0.09), transparent 34rem),
+    radial-gradient(circle at 85% 16%, rgba(16, 86, 102, 0.11), transparent 30rem),
+    #061A10;
+  color: #F7F4D5;
 }
 
 button,
@@ -38,10 +38,10 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0e13;
+  background: #061A10;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262e3a;
+  background: #163525;
   border-radius: 999px;
 }

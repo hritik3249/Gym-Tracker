@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Dumbbell size={22} />
           </span>
           <span>
-            <span className="block text-lg font-black tracking-normal">LiftLoop</span>
+            <span className="block text-lg font-black tracking-normal text-cream">LiftLoop</span>
             <span className="text-xs uppercase tracking-[0.18em] text-steel">PPLA Tracker</span>
           </span>
         </Link>
@@ -75,8 +75,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onFocus={() => prefetchTab(item.href)}
                 onMouseEnter={() => prefetchTab(item.href)}
                 className={cn(
-                  "flex h-12 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-steel transition hover:bg-white/5 hover:text-white",
-                  active && "bg-white/8 text-white shadow-glow",
+                  "flex h-12 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-steel transition hover:bg-white/5 hover:text-cream",
+                  active && "bg-white/8 text-cream shadow-glow",
                 )}
               >
                 <Icon size={19} />

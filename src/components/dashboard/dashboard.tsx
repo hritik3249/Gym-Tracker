@@ -34,7 +34,7 @@ export function Dashboard({ data }: { data: DashboardAnalytics }) {
       <div className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
         <Card>
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-lg font-black">Weekly consistency</h2>
+            <h2 className="text-lg font-black text-cream">Weekly consistency</h2>
             <span className="text-sm text-steel">{data.weeklyConsistency.filter((day) => day.completed).length}/7 sessions</span>
           </div>
           <div className="flex h-72 items-end gap-3">
@@ -54,13 +54,13 @@ export function Dashboard({ data }: { data: DashboardAnalytics }) {
         </Card>
 
         <Card>
-          <h2 className="mb-4 text-lg font-black">Best lifts</h2>
+          <h2 className="mb-4 text-lg font-black text-cream">Best lifts</h2>
           <div className="space-y-3">
             {data.bestLifts.length === 0 && <p className="text-sm text-steel">Complete a workout to start your leaderboard.</p>}
             {data.bestLifts.map((lift) => (
               <div key={lift.exercise} className="flex items-center justify-between rounded-lg bg-white/[0.04] p-3">
                 <div>
-                  <p className="font-semibold">{lift.exercise}</p>
+                  <p className="font-semibold text-cream">{lift.exercise}</p>
                   <p className="text-xs text-steel">{lift.reps} reps</p>
                 </div>
                 <span className="text-lg font-black text-acid">{lift.weight} kg</span>
@@ -72,12 +72,12 @@ export function Dashboard({ data }: { data: DashboardAnalytics }) {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
-          <h2 className="mb-4 text-lg font-black">Volume analytics</h2>
+          <h2 className="mb-4 text-lg font-black text-cream">Volume analytics</h2>
           <div className="space-y-3">
             {data.volumeByCategory.map((item) => (
               <div key={item.category}>
                 <div className="mb-2 flex justify-between text-sm">
-                  <span>{categoryLabel(item.category)}</span>
+                  <span className="text-cream">{categoryLabel(item.category)}</span>
                   <span className="text-steel">{formatNumber(item.volume)} kg</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/8">
@@ -89,12 +89,12 @@ export function Dashboard({ data }: { data: DashboardAnalytics }) {
         </Card>
 
         <Card>
-          <h2 className="mb-4 text-lg font-black">Muscle frequency</h2>
+          <h2 className="mb-4 text-lg font-black text-cream">Muscle frequency</h2>
           <div className="grid grid-cols-2 gap-3">
             {data.muscleFrequency.slice(0, 8).map((item) => (
               <div key={item.muscle} className="rounded-lg bg-white/[0.04] p-3">
-                <p className="text-sm font-semibold">{item.muscle}</p>
-                <p className="mt-2 text-2xl font-black text-mint">{item.sessions}</p>
+                <p className="text-sm font-semibold text-cream">{item.muscle}</p>
+                <p className="mt-2 text-2xl font-black text-acid">{item.sessions}</p>
               </div>
             ))}
           </div>

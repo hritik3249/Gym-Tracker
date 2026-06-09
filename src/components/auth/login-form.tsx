@@ -67,13 +67,13 @@ export function LoginForm() {
 
       <div className="mb-4 grid grid-cols-2 rounded-lg border border-line bg-white/[0.03] p-1">
         <button
-          className={`h-10 rounded-md text-sm font-semibold ${mode === "sign-in" ? "bg-white/10 text-white" : "text-steel"}`}
+          className={`h-10 rounded-md text-sm font-semibold ${mode === "sign-in" ? "bg-acid/20 text-cream" : "text-steel"}`}
           onClick={() => setMode("sign-in")}
         >
           Login
         </button>
         <button
-          className={`h-10 rounded-md text-sm font-semibold ${mode === "sign-up" ? "bg-white/10 text-white" : "text-steel"}`}
+          className={`h-10 rounded-md text-sm font-semibold ${mode === "sign-up" ? "bg-acid/20 text-cream" : "text-steel"}`}
           onClick={() => setMode("sign-up")}
         >
           Sign up

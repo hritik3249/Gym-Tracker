@@ -5,7 +5,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-lg border border-line bg-white/[0.04] px-3 text-base text-white outline-none transition placeholder:text-steel focus:border-acid/70 focus:ring-2 focus:ring-acid/10 sm:text-sm",
+        "h-11 w-full rounded-lg border border-line bg-white/[0.04] px-3 text-base text-cream outline-none transition placeholder:text-steel focus:border-acid/60 focus:ring-2 focus:ring-acid/10 sm:text-sm",
         className,
       )}
       {...props}
@@ -17,7 +17,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-11 w-full rounded-lg border border-line bg-panelSoft px-3 text-base text-white outline-none transition focus:border-acid/70 focus:ring-2 focus:ring-acid/10 sm:text-sm",
+        "h-11 w-full rounded-lg border border-line bg-panelSoft px-3 text-base text-cream outline-none transition focus:border-acid/60 focus:ring-2 focus:ring-acid/10 sm:text-sm",
         className,
       )}
       {...props}
