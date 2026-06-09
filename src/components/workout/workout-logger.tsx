@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SummaryData } from "@/components/workout/workout-summary";
 import { WorkoutSummary } from "@/components/workout/workout-summary";
+import { FloatingRestTimer } from "@/components/workout/floating-rest-timer";
+import { PrCelebration } from "@/components/workout/pr-celebration";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { RestTimer } from "@/components/workout/rest-timer";
+import { useRestTimer } from "@/hooks/use-rest-timer";
 import { CATEGORIES, categoryLabel, getNextCategory } from "@/lib/constants";
 import { resilientFetch } from "@/lib/offline";
 import type { Exercise, ExerciseCategory, WorkoutWithSets } from "@/types/domain";
@@ -47,6 +50,10 @@ export function WorkoutLogger({
 }) {
   const router = useRouter();
   const { toast } = useToast();
+  const timer = useRestTimer(90);
+  const timerRef = useRef(timer);
+  useEffect(() => { timerRef.current = timer; });
+
   const [exercises] = useState<Exercise[]>(initialExercises);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [category, setCategory] = useState<ExerciseCategory>(getNextCategory(previousWorkout?.category));
@@ -56,6 +63,16 @@ export function WorkoutLogger({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "offline">("idle");
   const [sessionPRs, setSessionPRs] = useState<{ exercise: string; weight: number }[]>([]);
   const [summary, setSummary] = useState<SummaryData | null>(null);
+  const [showPr, setShowPr] = useState<{ exercise: string; weight: number } | null>(null);
+  const clearPr = useCallback(() => setShowPr(null), []);
+
+  useEffect(() => {
+    const handler = () => {
+      if (!timerRef.current.running) timerRef.current.start();
+    };
+    window.addEventListener("liftloop:set-completed", handler);
+    return () => window.removeEventListener("liftloop:set-completed", handler);
+  }, []);
 
   const prBaseline = useMemo(() => {
     const map = new Map<string, number>();
@@ -167,7 +184,7 @@ export function WorkoutLogger({
     if (patch.completed === true) {
       const set = sets.find((s) => s.localId === localId);
       if (set && !set.completed) {
-        window.dispatchEvent(new Event("liftloop:set-completed"));
+        window.dispatchEvent(new CustomEvent("liftloop:set-completed"));
 
         const weight = Number(set.weight || 0);
         if (weight > 0) {
@@ -178,7 +195,7 @@ export function WorkoutLogger({
               const already = current.some((pr) => pr.exercise === name);
               return already ? current : [...current, { exercise: name, weight }];
             });
-            toast(`New PR! ${name} — ${weight} kg`);
+            setShowPr({ exercise: name, weight });
           }
         }
       }
@@ -221,6 +238,9 @@ export function WorkoutLogger({
   }
 
   return (
+    <>
+    <PrCelebration pr={showPr} onDone={clearPr} />
+    <FloatingRestTimer timer={timer} />
     <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
       <div className="space-y-5">
         <Card className="p-4">
@@ -414,7 +434,7 @@ export function WorkoutLogger({
       </div>
 
       <aside className="space-y-5">
-        <RestTimer />
+        <RestTimer timer={timer} />
         <Card>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-steel">Save mode</p>
           <p className="mt-2 flex items-center gap-2 text-lg font-black">
@@ -431,5 +451,6 @@ export function WorkoutLogger({
         </Card>
       </aside>
     </div>
+    </>
   );
 }
