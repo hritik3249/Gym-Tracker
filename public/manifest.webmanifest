@@ -3,8 +3,8 @@
   "short_name": "LiftLoop",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#07090d",
-  "theme_color": "#07090d",
+  "background_color": "#061A10",
+  "theme_color": "#061A10",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, RefreshCw, Save, Wifi } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Download, LogOut, RefreshCw, Save, Wifi } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
@@ -16,6 +18,7 @@ const genderOptions: { value: Gender; label: string }[] = [
 ];
 
 export function SettingsPanel({ profile }: { profile: Profile }) {
+  const router = useRouter();
   const [form, setForm] = useState({
     display_name: profile.display_name ?? "",
     age: profile.age?.toString() ?? "",
@@ -23,6 +26,12 @@ export function SettingsPanel({ profile }: { profile: Profile }) {
     gender: profile.gender ?? "prefer_not_to_say",
   });
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+
+  async function signOut() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.replace("/login");
+  }
 
   async function exportData(format: "json" | "csv") {
     const response = await fetch(`/api/export${format === "csv" ? "?format=csv" : ""}`);
@@ -134,6 +143,19 @@ export function SettingsPanel({ profile }: { profile: Profile }) {
             <Wifi size={18} />
             Browser managed
           </span>
+        </div>
+      </Card>
+
+      <Card className="lg:col-span-2">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-lg font-black">Sign out</h2>
+            <p className="mt-1 text-sm text-steel">You will be returned to the login screen.</p>
+          </div>
+          <Button variant="danger" onClick={signOut}>
+            <LogOut size={18} />
+            Sign out
+          </Button>
         </div>
       </Card>
     </div>

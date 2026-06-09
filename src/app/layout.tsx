@@ -10,12 +10,13 @@ export const metadata: Metadata = {
   description: "A premium Push Pull Legs Arms workout tracker.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07090d",
+  themeColor: "#061A10",
   width: "device-width",
   initialScale: 1,
 };
