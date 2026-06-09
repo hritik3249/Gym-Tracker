@@ -142,8 +142,33 @@ export function WorkoutHistory({ initialWorkouts }: { initialWorkouts: WorkoutWi
               </div>
             </div>
 
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+            {/* Mobile: stacked rows grouped by exercise */}
+            <div className="mt-4 space-y-3 md:hidden">
+              {Object.entries(
+                workout.workout_sets.reduce<Record<string, typeof workout.workout_sets>>((acc, set) => {
+                  const name = set.exercises?.name ?? "Exercise";
+                  (acc[name] ??= []).push(set);
+                  return acc;
+                }, {}),
+              ).map(([name, sets]) => (
+                <div key={name}>
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.14em] text-acid">{name}</p>
+                  <div className="space-y-1.5">
+                    {sets.map((set) => (
+                      <div key={set.id} className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                        <span className="text-xs font-semibold text-steel">Set {set.set_index}</span>
+                        <span className="text-sm font-black text-cream">{set.weight} kg × {set.reps}</span>
+                        {set.notes ? <span className="max-w-[100px] truncate text-xs text-steel">{set.notes}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="mt-5 hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
                 <thead className="text-left text-xs uppercase tracking-[0.16em] text-steel">
                   <tr>
                     <th className="py-2">Exercise</th>
