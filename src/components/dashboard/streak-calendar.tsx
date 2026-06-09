@@ -1,6 +1,6 @@
 "use client";
 
-import { format, getDay, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Card } from "@/components/ui/card";
 
 type Props = { heatmap: { date: string; count: number }[] };
@@ -16,7 +16,7 @@ export function StreakCalendar({ heatmap }: Props) {
   if (heatmap.length === 0) return null;
 
   // Pad start so first column aligns to Monday (0=Mon … 6=Sun)
-  const firstDow = (getDay(parseISO(heatmap[0].date)) + 6) % 7;
+  const firstDow = (parseISO(heatmap[0].date).getDay() + 6) % 7;
   const padded: ({ date: string; count: number } | null)[] = [
     ...Array<null>(firstDow).fill(null),
     ...heatmap,
