@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CalendarCheck, Dumbbell, Flame, Gauge, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { StreakCalendar } from "@/components/dashboard/streak-calendar";
 import { categoryLabel } from "@/lib/constants";
 import { formatNumber } from "@/lib/utils";
 import type { DashboardAnalytics } from "@/types/domain";
@@ -127,6 +128,8 @@ export function Dashboard({ data }: { data: DashboardAnalytics }) {
           </div>
         </Card>
       </div>
+
+      <StreakCalendar heatmap={data.heatmap} />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>

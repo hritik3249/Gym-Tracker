@@ -1,3 +1,4 @@
+import { subWeeks } from "date-fns";
 import { buildDashboardAnalytics, buildProgressPoints } from "@/lib/analytics";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Exercise, Profile, WorkoutWithSets } from "@/types/domain";
@@ -12,16 +13,30 @@ export async function getProfile(userId: string) {
 
 export async function getDashboardData(userId: string) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("workouts")
-    .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
-    .eq("user_id", userId)
-    .eq("status", "completed")
-    .order("performed_at", { ascending: false })
-    .limit(60);
+  const oneYearAgo = subWeeks(new Date(), 52).toISOString();
 
-  if (error) throw new Error(error.message);
-  return buildDashboardAnalytics((data ?? []) as unknown as WorkoutWithSets[]);
+  const [workoutsResult, heatmapResult] = await Promise.all([
+    supabase
+      .from("workouts")
+      .select("*, workout_sets(*, exercises(id, name, category, target_muscle))")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .order("performed_at", { ascending: false })
+      .limit(60),
+    supabase
+      .from("workouts")
+      .select("performed_at")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .gte("performed_at", oneYearAgo),
+  ]);
+
+  if (workoutsResult.error) throw new Error(workoutsResult.error.message);
+
+  return buildDashboardAnalytics(
+    (workoutsResult.data ?? []) as unknown as WorkoutWithSets[],
+    (heatmapResult.data ?? []).map((w) => w.performed_at),
+  );
 }
 
 export async function getExercises(userId: string) {

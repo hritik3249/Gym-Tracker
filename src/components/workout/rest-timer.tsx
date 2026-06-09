@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { useRestTimer } from "@/hooks/use-rest-timer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,16 @@ const presets = [60, 90, 120, 180];
 
 export function RestTimer() {
   const timer = useRestTimer(90);
+  const timerRef = useRef(timer);
+  useEffect(() => { timerRef.current = timer; });
+
+  useEffect(() => {
+    const handler = () => {
+      if (!timerRef.current.running) timerRef.current.start();
+    };
+    window.addEventListener("liftloop:set-completed", handler);
+    return () => window.removeEventListener("liftloop:set-completed", handler);
+  }, []);
   const minutes = useMemo(() => Math.floor(timer.durationSeconds / 60), [timer.durationSeconds]);
   const seconds = useMemo(() => timer.durationSeconds % 60, [timer.durationSeconds]);
 

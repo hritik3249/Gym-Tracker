@@ -70,4 +70,5 @@ export type DashboardAnalytics = {
   volumeByCategory: { category: ExerciseCategory; volume: number }[];
   muscleFrequency: { muscle: string; sessions: number }[];
   recentWorkouts: WorkoutWithSets[];
+  heatmap: { date: string; count: number }[];
 };

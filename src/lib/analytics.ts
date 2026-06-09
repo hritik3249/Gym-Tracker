@@ -1,11 +1,25 @@
-import { differenceInCalendarDays, eachDayOfInterval, endOfDay, format, startOfDay, subDays } from "date-fns";
+import { differenceInCalendarDays, eachDayOfInterval, endOfDay, format, startOfDay, subDays, subWeeks } from "date-fns";
 import type { DashboardAnalytics, ExerciseCategory, WorkoutSet, WorkoutWithSets } from "@/types/domain";
 
 function setVolume(set: WorkoutSet) {
   return Number(set.weight) * Number(set.reps);
 }
 
-export function buildDashboardAnalytics(workouts: WorkoutWithSets[]): DashboardAnalytics {
+export function buildHeatmap(performedDates: string[]): { date: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const d of performedDates) {
+    const key = format(new Date(d), "yyyy-MM-dd");
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const end = new Date();
+  const start = subWeeks(end, 52);
+  return eachDayOfInterval({ start, end }).map((day) => {
+    const key = format(day, "yyyy-MM-dd");
+    return { date: key, count: counts.get(key) ?? 0 };
+  });
+}
+
+export function buildDashboardAnalytics(workouts: WorkoutWithSets[], heatmapDates: string[] = []): DashboardAnalytics {
   const completed = workouts
     .filter((workout) => workout.status === "completed")
     .sort((a, b) => new Date(b.performed_at).getTime() - new Date(a.performed_at).getTime());
@@ -66,6 +80,7 @@ export function buildDashboardAnalytics(workouts: WorkoutWithSets[]): DashboardA
       .map(([muscle, sessions]) => ({ muscle, sessions: sessions.size }))
       .sort((a, b) => b.sessions - a.sessions),
     recentWorkouts: completed.slice(0, 6),
+    heatmap: buildHeatmap(heatmapDates),
   };
 }
 

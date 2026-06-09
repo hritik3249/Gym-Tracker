@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { SummaryData } from "@/components/workout/workout-summary";
+import { WorkoutSummary } from "@/components/workout/workout-summary";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,6 +54,19 @@ export function WorkoutLogger({
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [sets, setSets] = useState<DraftSet[]>([]);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "offline">("idle");
+  const [sessionPRs, setSessionPRs] = useState<{ exercise: string; weight: number }[]>([]);
+  const [summary, setSummary] = useState<SummaryData | null>(null);
+
+  const prBaseline = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const workout of recentWorkouts) {
+      for (const set of workout.workout_sets) {
+        const w = Number(set.weight);
+        if (w > (map.get(set.exercise_id) ?? 0)) map.set(set.exercise_id, w);
+      }
+    }
+    return map;
+  }, [recentWorkouts]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setDurationSeconds((seconds) => seconds + 1), 1000);
@@ -82,16 +97,26 @@ export function WorkoutLogger({
       setSaveState("saved");
       localStorage.setItem("liftloop:workout-finished", new Date().toISOString());
       window.dispatchEvent(new Event("liftloop:workout-finished"));
+      const completedSets = sets.filter((s) => s.completed);
+      const summaryData: SummaryData = {
+        category,
+        durationSeconds,
+        totalSets: sets.length,
+        completedSets: completedSets.length,
+        volume: completedSets.reduce((t, s) => t + Number(s.weight) * Number(s.reps), 0),
+        prs: sessionPRs,
+      };
+
       setWorkoutId(null);
       setSets([]);
       setNotes("");
       setCategory(getNextCategory(category));
       setDurationSeconds(0);
-      toast("Workout saved!");
-      router.push("/");
+      setSessionPRs([]);
+      setSummary(summaryData);
       router.refresh();
     },
-    [category, durationSeconds, notes, router, sets, toast, workoutId],
+    [category, durationSeconds, notes, router, sessionPRs, sets, workoutId],
   );
 
   const filteredExercises = useMemo(() => exercises.filter((exercise) => exercise.category === category), [category, exercises]);
@@ -138,6 +163,26 @@ export function WorkoutLogger({
 
   function updateSet(localId: string, patch: Partial<DraftSet>) {
     setSets((current) => current.map((set) => (set.localId === localId ? { ...set, ...patch } : set)));
+
+    if (patch.completed === true) {
+      const set = sets.find((s) => s.localId === localId);
+      if (set && !set.completed) {
+        window.dispatchEvent(new Event("liftloop:set-completed"));
+
+        const weight = Number(set.weight || 0);
+        if (weight > 0) {
+          const prevMax = prBaseline.get(set.exercise_id) ?? 0;
+          if (weight > prevMax) {
+            const name = exercises.find((e) => e.id === set.exercise_id)?.name ?? "exercise";
+            setSessionPRs((current) => {
+              const already = current.some((pr) => pr.exercise === name);
+              return already ? current : [...current, { exercise: name, weight }];
+            });
+            toast(`New PR! ${name} — ${weight} kg`);
+          }
+        }
+      }
+    }
   }
 
   function deleteSet(localId: string) {
@@ -161,6 +206,18 @@ export function WorkoutLogger({
 
   function addFirstSet() {
     if (filteredExercises[0]) addSet(filteredExercises[0].id);
+  }
+
+  if (summary) {
+    return (
+      <WorkoutSummary
+        data={summary}
+        onDone={() => {
+          setSummary(null);
+          router.push("/");
+        }}
+      />
+    );
   }
 
   return (
