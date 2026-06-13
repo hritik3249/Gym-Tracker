@@ -27,6 +27,18 @@ type DraftSet = {
   completed: boolean;
 };
 
+const DRAFT_KEY = "liftloop:workout-draft";
+type DraftState = { category: ExerciseCategory; notes: string; sets: DraftSet[] };
+
+function loadDraft(): DraftState | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DraftState;
+    return parsed.sets?.length > 0 ? parsed : null;
+  } catch { return null; }
+}
+
 function toDraftSets(workout?: WorkoutWithSets | null): DraftSet[] {
   return (workout?.workout_sets ?? []).map((set) => ({
     localId: set.id,
@@ -56,10 +68,15 @@ export function WorkoutLogger({
 
   const [exercises] = useState<Exercise[]>(initialExercises);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
-  const [category, setCategory] = useState<ExerciseCategory>(getNextCategory(previousWorkout?.category));
-  const [notes, setNotes] = useState("");
+
+  // Restore draft if the app was closed mid-workout
+  const draft = useRef<DraftState | null>(null);
+  if (draft.current === null) draft.current = loadDraft();
+
+  const [category, setCategory] = useState<ExerciseCategory>(draft.current?.category ?? getNextCategory(previousWorkout?.category));
+  const [notes, setNotes] = useState(draft.current?.notes ?? "");
   const [durationSeconds, setDurationSeconds] = useState(0);
-  const [sets, setSets] = useState<DraftSet[]>([]);
+  const [sets, setSets] = useState<DraftSet[]>(draft.current?.sets ?? []);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "offline">("idle");
   const [sessionPRs, setSessionPRs] = useState<{ exercise: string; weight: number }[]>([]);
   const [summary, setSummary] = useState<SummaryData | null>(null);
@@ -89,6 +106,15 @@ export function WorkoutLogger({
     const interval = window.setInterval(() => setDurationSeconds((seconds) => seconds + 1), 1000);
     return () => window.clearInterval(interval);
   }, []);
+
+  // Persist draft on every change so closing the app doesn't lose progress
+  useEffect(() => {
+    if (sets.length === 0 && !notes) {
+      localStorage.removeItem(DRAFT_KEY);
+    } else {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ category, notes, sets }));
+    }
+  }, [category, notes, sets]);
 
   const finishWorkout = useCallback(
     async () => {
@@ -124,6 +150,7 @@ export function WorkoutLogger({
         prs: sessionPRs,
       };
 
+      localStorage.removeItem(DRAFT_KEY);
       setWorkoutId(null);
       setSets([]);
       setNotes("");
@@ -233,6 +260,21 @@ export function WorkoutLogger({
 
   function deleteSet(localId: string) {
     setSets((current) => current.filter((set) => set.localId !== localId));
+  }
+
+  function duplicateSet(localId: string) {
+    setSets((current) => {
+      const src = current.find((s) => s.localId === localId);
+      if (!src) return current;
+      const siblings = current.filter((s) => s.exercise_id === src.exercise_id);
+      const newSet: DraftSet = {
+        ...src,
+        localId: crypto.randomUUID(),
+        set_index: siblings.length + 1,
+        completed: false,
+      };
+      return [...current, newSet];
+    });
   }
 
   async function repeatPrevious() {
@@ -382,6 +424,9 @@ export function WorkoutLogger({
                         />
                         Done
                       </label>
+                      <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Duplicate set" onClick={() => duplicateSet(set.localId)}>
+                        <Copy size={16} />
+                      </Button>
                       <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Delete set" onClick={() => deleteSet(set.localId)}>
                         <Trash2 size={16} />
                       </Button>
@@ -485,9 +530,14 @@ export function WorkoutLogger({
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Delete set" onClick={() => deleteSet(set.localId)}>
-                          <Trash2 size={16} />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Duplicate set" onClick={() => duplicateSet(set.localId)}>
+                            <Copy size={16} />
+                          </Button>
+                          <Button className="h-9 w-9 p-0" variant="ghost" aria-label="Delete set" onClick={() => deleteSet(set.localId)}>
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
